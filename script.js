@@ -1,54 +1,92 @@
-const inputButton = document.getElementById("InputBtn");
-const inputField = document.getElementById("InputField");
-const list = document.getElementById("taskList");
-inputButton.addEventListener("click", append);
+function appendTask() {
+  console.log("appendTask");
+  input = document.getElementById("InputField");
 
+  if (input.value === "") {
+    alert("Please enter a task");
+    return;
+  }
 
-function loader() {
-	
-}
-loader()
+  tasks = localStorage.getItem("tasks");
+  if (tasks === null) {
+    tasks = {};
+  } else {
+    tasks = JSON.parse(tasks);
+  }
 
-// let count=0
-let count = localStorage.length;
+  task = {
+    task: input.value,
+    isCompleted: false,
+  };
 
-// console.log(count);
-function append() {
-	count += 1;
-	// console.log(count);
+  tasks[createID()] = task;
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  addTask(task);
 
-	let taskInput = inputField.value;
-	let task={
-		text: taskInput,
-		completed: false
-	}
-	localStorage.setItem(count, JSON.stringify(task));
-	inputField.value = "";
-	
-	const listItem = document.createElement("li");
-	const textDiv=document.createElement("div");
-	textDiv.classList.add("textDiv")
-	const pText=document.createElement("p");
-	pText.textContent=taskInput
-	textDiv.appendChild(pText)
-
-	listItem.appendChild(textDiv)
-    addButton(listItem)
-    
-	list.appendChild(listItem);
+  input.value = "";
 }
 
-function addButton(listItem){
-    cmpButton=document.createElement("button")
-    cmpButton.textContent="mark as completed"
-    cmpButton.addEventListener("click", function(){completed(this)})
-    listItem.appendChild(cmpButton)
+const createID = () => {
+  return Math.random().toString(36).substr(2, 9);
+};
+
+function loadTasks() {
+  console.log("loadTasks");
+  tasks = localStorage.getItem("tasks");
+  if (tasks === null) {
+    return;
+  }
+  tasks = JSON.parse(tasks);
+
+  for (task in tasks) {
+    addTask(tasks[task], task);
+  }
 }
 
-function completed(cButton){
-	const textDiv=cButton.previousElementSibling;
-	let crossed=document.createElement("del");
-	crossed.textContent=textDiv.children[0].textContent
-	textDiv.removeChild(textDiv.children[0])
-	textDiv.appendChild(crossed)
-}	
+function addTask(task, id) {
+  const ul = document.getElementById("taskList");
+  const li = document.createElement("li");
+  const span = document.createElement("span");
+
+  if (task.isCompleted) {
+    span.style.textDecoration = "line-through";
+  }
+  const btn = document.createElement("button");
+  btn.innerHTML = task.isCompleted ? "Uncomplete" : "Complete";
+  btn.style.marginLeft = "auto";
+  btn.onclick = function () {
+    task.isCompleted = !task.isCompleted;
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+    if (task.isCompleted) {
+      span.style.textDecoration = "line-through";
+      btn.innerHTML = "Uncomplete";
+    } else {
+      span.style.textDecoration = "none";
+      btn.innerHTML = "Complete";
+      // btn.style.textDecoration = "none";
+    }
+
+    // btn.remove();
+  };
+  span.appendChild(document.createTextNode(task.task));
+  li.appendChild(span);
+  li.appendChild(btn);
+  const deleteBtn = document.createElement("button");
+  deleteBtn.innerHTML = "X";
+  deleteBtn.style.marginLeft = "left";
+  deleteBtn.style.marginLeft = "10px";
+  deleteBtn.onclick = function () {
+    deleteTask(id);
+    li.remove();
+  };
+  li.append(deleteBtn);
+  ul.appendChild(li);
+}
+
+const deleteTask = (id) => {
+  const tasks = JSON.parse(localStorage.getItem("tasks"));
+  delete tasks[id];
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+};
+
+loadTasks();
